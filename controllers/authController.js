@@ -1,5 +1,6 @@
 const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 const User = require("../models/User");
 
@@ -25,7 +26,15 @@ exports.registerUser = async (req, res) => {
     });
 
     await user.save();
-    res.status(201).json({ message: "✅ User registered successfully" });
+
+    // Generate JWT token
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+    res.status(201).json({
+      message: "✅ User registered successfully",
+      user: { name: user.name, email: user.email },
+      token,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -48,8 +57,14 @@ exports.loginUser = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    // Send success response (you might want to send a token here in a real app)
-    res.status(200).json({ message: "✅ Logged in successfully" });
+    // Generate JWT token
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+    res.status(200).json({
+      message: "✅ Logged in successfully",
+      user: { name: user.name, email: user.email },
+      token,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -87,8 +102,14 @@ exports.forgotPassword = async (req, res) => {
     const resetURL = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
     await transporter.sendMail({
       to: email,
+      from: process.env.EMAIL_USER,
       subject: "Password Reset Request",
-      text: `You requested a password reset. Please click on the following link to reset your password: ${resetURL}`,
+      html: `
+        <h2>Password Reset Request</h2>
+        <p>Click the link below to reset your password:</p>
+        <a href="${resetURL}" target="_blank">${resetURL}</a>
+        <p>This link will expire in 1 hour.</p>
+      `,
     });
 
     res.status(200).json({
@@ -124,6 +145,23 @@ exports.resetPassword = async (req, res) => {
     await user.save();
 
     res.status(200).json({ message: "✅ Password successfully reset" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get User Profile (Protected)
+exports.getUserProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      name: user.name,
+      email: user.email,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
