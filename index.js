@@ -3,6 +3,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const authRoutes = require("./routes/authRoutes");
+const jewelryRoutes = require("./routes/jewelryRoutes");
 
 const app = express();
 
@@ -19,6 +20,7 @@ mongoose
 
 // Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/jewelry",jewelryRoutes);
 
 app.get("/", (req, res) => {
   res.send("🚀 API is running...");
