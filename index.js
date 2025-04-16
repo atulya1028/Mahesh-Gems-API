@@ -27,8 +27,8 @@ const connectDB = async () => {
 connectDB();
 
 // Routes
-const authRoutes = require("../routes/authRoutes");
-const jewelryRoutes = require("../routes/jewelryRoutes");
+const authRoutes = require("./routes/authRoutes");
+const jewelryRoutes = require("./routes/jewelryRoutes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/jewelry", jewelryRoutes);
