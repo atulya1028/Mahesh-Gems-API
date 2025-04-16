@@ -123,12 +123,13 @@ exports.forgotPassword = async (req, res) => {
 // Reset Password
 exports.resetPassword = async (req, res) => {
   try {
-    const { token, newPassword } = req.body;
+    const { token } = req.params; // Get the token from the URL params
+    const { newPassword } = req.body; // Get the new password from the body
 
     // Find user with the provided reset token and check expiration
     const user = await User.findOne({
       resetPasswordToken: token,
-      resetPasswordExpires: { $gt: Date.now() },
+      resetPasswordExpires: { $gt: Date.now() }, // Ensure token is not expired
     });
 
     if (!user) {
@@ -140,8 +141,8 @@ exports.resetPassword = async (req, res) => {
 
     // Update the user's password
     user.password = hashedPassword;
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpires = undefined;
+    user.resetPasswordToken = undefined; // Clear the reset token
+    user.resetPasswordExpires = undefined; // Clear the expiration time
     await user.save();
 
     res.status(200).json({ message: "✅ Password successfully reset" });
@@ -149,6 +150,7 @@ exports.resetPassword = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 // Get User Profile (Protected)
 exports.getUserProfile = async (req, res) => {
