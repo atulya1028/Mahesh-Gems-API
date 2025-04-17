@@ -27,13 +27,17 @@ exports.registerUser = async (req, res) => {
 
     await user.save();
 
-    // Generate JWT token
+    // Generate JWT access token
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+    // Generate refresh token (valid for 7 days)
+    const refreshToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
     res.status(201).json({
       message: "✅ User registered successfully",
       user: { name: user.name, email: user.email },
       token,
+      refreshToken,  // Send refresh token in response
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -57,13 +61,17 @@ exports.loginUser = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    // Generate JWT token
+    // Generate JWT access token
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+    // Generate refresh token (valid for 7 days)
+    const refreshToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
     res.status(200).json({
       message: "✅ Logged in successfully",
       user: { name: user.name, email: user.email },
       token,
+      refreshToken,  // Send refresh token in response
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -151,6 +159,39 @@ exports.resetPassword = async (req, res) => {
   }
 };
 
+// Refresh Token
+exports.refreshToken = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(400).json({ message: "Refresh token is required" });
+    }
+
+    // Verify the refresh token
+    jwt.verify(refreshToken, process.env.JWT_SECRET, async (err, decoded) => {
+      if (err) {
+        return res.status(400).json({ message: "Invalid or expired refresh token" });
+      }
+
+      // Find the user associated with the refresh token
+      const user = await User.findById(decoded.userId);
+      if (!user) {
+        return res.status(400).json({ message: "User not found" });
+      }
+
+      // Generate a new access token
+      const newAccessToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+      res.status(200).json({
+        message: "✅ New access token generated",
+        token: newAccessToken, // Send the new access token
+      });
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
 // Get User Profile (Protected)
 exports.getUserProfile = async (req, res) => {

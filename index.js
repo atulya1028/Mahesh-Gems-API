@@ -20,7 +20,7 @@ mongoose
 
 // Routes
 app.use("/api/auth", authRoutes);
-app.use("/api/jewelry",jewelryRoutes);
+app.use("/api/jewelry", jewelryRoutes);
 
 app.get("/", (req, res) => {
   res.send("🚀 API is running...");
