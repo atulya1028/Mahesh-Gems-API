@@ -7,8 +7,12 @@ exports.getCart = async (req, res) => {
     if (!cart) {
       return res.status(200).json({ items: [], subtotal: 0 });
     }
-    const subtotal = cart.items.reduce((sum, item) => sum + parseFloat(item.price) * item.quantity, 0);
-    res.status(200).json({ items: cart.items, subtotal });
+    const items = cart.items.map((item) => ({
+      ...item._doc,
+      jewelryId: item.jewelryId._id.toString(), // Convert to string
+    }));
+    const subtotal = items.reduce((sum, item) => sum + parseFloat(item.price) * item.quantity, 0);
+    res.status(200).json({ items, subtotal });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
