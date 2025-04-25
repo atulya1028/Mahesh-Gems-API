@@ -64,6 +64,11 @@ exports.updateCartItem = async (req, res) => {
       return res.status(404).json({ message: "Item not found in cart" });
     }
 
+    const jewelry = await Jewelry.findById(jewelryId);
+    if (!jewelry || (jewelry.stock && quantity > jewelry.stock)) {
+      return res.status(400).json({ message: `Only ${jewelry.stock || 0} items in stock` });
+    }
+
     if (quantity <= 0) {
       cart.items.splice(itemIndex, 1);
     } else {
