@@ -1,8 +1,9 @@
 const Wishlist = require("../models/Wishlist");
+const Jewelry = require("../models/Jewelry");
 
 exports.getWishlist = async (req, res) => {
   try {
-    const wishlist = await Wishlist.findOne({ userId: req.user.userId }).populate("items.jewelryId");
+    const wishlist = await Wishlist.findOne({ userId: req.user.userId });
     if (!wishlist) {
       return res.status(200).json({ items: [] });
     }
@@ -21,7 +22,7 @@ exports.addToWishlist = async (req, res) => {
       wishlist = new Wishlist({ userId: req.user.userId, items: [] });
     }
 
-    const jewelry = await require("../models/Jewelry").findById(jewelryId);
+    const jewelry = await Jewelry.findById(jewelryId);
     if (!jewelry) {
       return res.status(404).json({ message: "Jewelry item not found" });
     }
@@ -55,7 +56,11 @@ exports.removeFromWishlist = async (req, res) => {
       return res.status(404).json({ message: "Wishlist not found" });
     }
 
-    wishlist.items = wishlist.items.filter((item) => item.jewelryId.toString() !== jewelryId);
+    wishlist.items = wishlist.items.filter((item) => {
+      const id = item.jewelryId._id ? item.jewelryId._id.toString() : item.jewelryId.toString();
+      return id !== jewelryId;
+    });
+
     await wishlist.save();
     res.status(200).json({ message: "✅ Removed from wishlist", wishlist });
   } catch (error) {
