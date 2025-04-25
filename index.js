@@ -5,6 +5,7 @@ const cors = require("cors");
 const authRoutes = require("./routes/authRoutes");
 const jewelryRoutes = require("./routes/jewelryRoutes");
 const wishlistRoutes = require("./routes/wishlistRoutes");
+const cartRoutes = require("./routes/cartRoutes");
 const app = express();
 
 // Middleware
@@ -22,6 +23,7 @@ mongoose
 app.use("/api/auth", authRoutes);
 app.use("/api/jewelry", jewelryRoutes);
 app.use("/api/wishlist", wishlistRoutes);
+app.use("/api/cart", cartRoutes);
 app.get("/", (req, res) => {
   res.send("🚀 API is running...");
 });
