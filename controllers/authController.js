@@ -40,7 +40,7 @@ exports.registerUser = async (req, res) => {
       refreshToken,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -74,7 +74,7 @@ exports.loginUser = async (req, res) => {
       refreshToken,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -124,7 +124,7 @@ exports.forgotPassword = async (req, res) => {
       message: "✅ Password reset link has been sent to your email.",
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -155,7 +155,7 @@ exports.resetPassword = async (req, res) => {
 
     res.status(200).json({ message: "✅ Password successfully reset" });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -189,7 +189,7 @@ exports.refreshToken = async (req, res) => {
       });
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -206,7 +206,7 @@ exports.getUserProfile = async (req, res) => {
       email: user.email,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -215,6 +215,10 @@ exports.updateUserProfile = async (req, res) => {
   try {
     const { name, email, password } = req.body;
     const userId = req.user.userId;
+
+    if (!name || !email) {
+      return res.status(400).json({ message: "Name and email are required" });
+    }
 
     // Find the user
     const user = await User.findById(userId);
@@ -231,11 +235,14 @@ exports.updateUserProfile = async (req, res) => {
     }
 
     // Update fields
-    user.name = name || user.name;
-    user.email = email || user.email;
+    user.name = name;
+    user.email = email;
 
     // Update password if provided
     if (password) {
+      if (password.length < 6) {
+        return res.status(400).json({ message: "Password must be at least 6 characters long" });
+      }
       const hashedPassword = await bcrypt.hash(password, 10);
       user.password = hashedPassword;
     }
@@ -247,6 +254,7 @@ exports.updateUserProfile = async (req, res) => {
       user: { name: user.name, email: user.email },
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Update Profile Error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
