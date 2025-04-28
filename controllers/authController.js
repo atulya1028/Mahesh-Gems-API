@@ -37,10 +37,10 @@ exports.registerUser = async (req, res) => {
       message: "✅ User registered successfully",
       user: { name: user.name, email: user.email },
       token,
-      refreshToken,
+      refreshToken,  // Send refresh token in response
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -71,10 +71,10 @@ exports.loginUser = async (req, res) => {
       message: "✅ Logged in successfully",
       user: { name: user.name, email: user.email },
       token,
-      refreshToken,
+      refreshToken,  // Send refresh token in response
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -101,8 +101,8 @@ exports.forgotPassword = async (req, res) => {
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+        user: process.env.EMAIL_USER, // Your email
+        pass: process.env.EMAIL_PASS, // Your email password
       },
     });
 
@@ -124,20 +124,20 @@ exports.forgotPassword = async (req, res) => {
       message: "✅ Password reset link has been sent to your email.",
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500).json({ error: error.message });
   }
 };
 
 // Reset Password
 exports.resetPassword = async (req, res) => {
   try {
-    const { token } = req.params;
-    const { newPassword } = req.body;
+    const { token } = req.params; // Get the token from the URL params
+    const { newPassword } = req.body; // Get the new password from the body
 
     // Find user with the provided reset token and check expiration
     const user = await User.findOne({
       resetPasswordToken: token,
-      resetPasswordExpires: { $gt: Date.now() },
+      resetPasswordExpires: { $gt: Date.now() }, // Ensure token is not expired
     });
 
     if (!user) {
@@ -149,13 +149,13 @@ exports.resetPassword = async (req, res) => {
 
     // Update the user's password
     user.password = hashedPassword;
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpires = undefined;
+    user.resetPasswordToken = undefined; // Clear the reset token
+    user.resetPasswordExpires = undefined; // Clear the expiration time
     await user.save();
 
     res.status(200).json({ message: "✅ Password successfully reset" });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -185,11 +185,11 @@ exports.refreshToken = async (req, res) => {
 
       res.status(200).json({
         message: "✅ New access token generated",
-        token: newAccessToken,
+        token: newAccessToken, // Send the new access token
       });
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -206,55 +206,6 @@ exports.getUserProfile = async (req, res) => {
       email: user.email,
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-};
-
-// Update User Profile (Protected)
-exports.updateUserProfile = async (req, res) => {
-  try {
-    const { name, email, password } = req.body;
-    const userId = req.user.userId;
-
-    if (!name || !email) {
-      return res.status(400).json({ message: "Name and email are required" });
-    }
-
-    // Find the user
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    // Check if the new email is already in use by another user
-    if (email && email !== user.email) {
-      const existingUser = await User.findOne({ email });
-      if (existingUser) {
-        return res.status(400).json({ message: "Email already registered" });
-      }
-    }
-
-    // Update fields
-    user.name = name;
-    user.email = email;
-
-    // Update password if provided
-    if (password) {
-      if (password.length < 6) {
-        return res.status(400).json({ message: "Password must be at least 6 characters long" });
-      }
-      const hashedPassword = await bcrypt.hash(password, 10);
-      user.password = hashedPassword;
-    }
-
-    await user.save();
-
-    res.status(200).json({
-      message: "✅ Profile updated successfully",
-      user: { name: user.name, email: user.email },
-    });
-  } catch (error) {
-    console.error("Update Profile Error:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500).json({ error: error.message });
   }
 };
