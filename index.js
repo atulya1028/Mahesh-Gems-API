@@ -6,6 +6,7 @@ const authRoutes = require("./routes/authRoutes");
 const jewelryRoutes = require("./routes/jewelryRoutes");
 const wishlistRoutes = require("./routes/wishlistRoutes");
 const cartRoutes = require("./routes/cartRoutes");
+const checkoutRoutes = require("./routes/checkoutRoutes");
 const app = express();
 
 // Middleware
@@ -24,6 +25,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/jewelry", jewelryRoutes);
 app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/cart", cartRoutes);
+app.use("/api", checkoutRoutes);
 app.get("/", (req, res) => {
   res.send("🚀 API is running...");
 });
