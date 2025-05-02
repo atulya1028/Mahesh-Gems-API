@@ -8,59 +8,78 @@ exports.getWishlist = async (req, res) => {
       return res.status(200).json({ items: [] });
     }
     res.status(200).json(wishlist);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 };
 
 exports.addToWishlist = async (req, res) => {
   try {
     const { jewelryId } = req.body;
-    const userId = req.user.userId;
+    let wishlist = await Wishlist.findOne({ userId: req.user.userId });
+
+    if (!wishlist) {
+      wishlist = new Wishlist({ userId: req.user.userId, items: [] });
+    }
 
     const jewelry = await Jewelry.findById(jewelryId);
     if (!jewelry) {
-      return res.status(404).json({ message: "Jewelry not found" });
+      return res.status(404).json({ message: "Jewelry item not found" });
     }
 
-    let wishlist = await Wishlist.findOne({ userId });
-    if (!wishlist) {
-      wishlist = new Wishlist({ userId, items: [] });
+    const itemExists = wishlist.items.some((item) => item.jewelryId.toString() === jewelryId);
+    if (itemExists) {
+      return res.status(400).json({ message: "Item already in wishlist" });
     }
 
-    if (!wishlist.items.some((item) => item.jewelryId.toString() === jewelryId)) {
-      wishlist.items.push({
-        jewelryId,
-        title: jewelry.title,
-        image: jewelry.media.find((m) => m.type === "image")?.url || "",
-        price: jewelry.price,
-      });
-      await wishlist.save();
-    }
+    wishlist.items.push({
+      jewelryId,
+      title: jewelry.title,
+      price: jewelry.price,
+      image: jewelry.image,
+      description: jewelry.description,
+    });
 
-    res.status(200).json(wishlist);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
+    await wishlist.save();
+    res.status(200).json({ message: "✅ Added to wishlist", wishlist });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 };
 
 exports.removeFromWishlist = async (req, res) => {
   try {
-    const { jewelryId } = req.body;
-    const userId = req.user.userId;
+    const { jewelryId } = req.params;
+    const wishlist = await Wishlist.findOne({ userId: req.user.userId });
 
-    const wishlist = await Wishlist.findOne({ userId });
     if (!wishlist) {
       return res.status(404).json({ message: "Wishlist not found" });
     }
 
-    wishlist.items = wishlist.items.filter((item) => item.jewelryId.toString() !== jewelryId);
+    wishlist.items = wishlist.items.filter((item) => {
+      const id = item.jewelryId._id ? item.jewelryId._id.toString() : item.jewelryId.toString();
+      return id !== jewelryId;
+    });
+
     await wishlist.save();
-    res.status(200).json(wishlist);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
+    res.status(200).json({ message: "✅ Removed from wishlist", wishlist });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.clearWishlist = async (req, res) => {
+  try {
+    const wishlist = await Wishlist.findOne({ userId: req.user.userId });
+
+    if (!wishlist) {
+      return res.status(404).json({ message: "Wishlist not found" });
+    }
+
+    wishlist.items = [];
+    await wishlist.save();
+    res.status(200).json({ message: "✅ Wishlist cleared", wishlist });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 };
