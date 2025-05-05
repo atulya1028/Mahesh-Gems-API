@@ -43,6 +43,12 @@ exports.addToCart = async (req, res) => {
     }
     console.log("Jewelry found:", jewelry); // Debug: Log jewelry item
 
+    // Validate required fields for cart item
+    if (!jewelry.image) {
+      console.log("Jewelry item missing required image field:", jewelry); // Debug
+      return res.status(400).json({ message: "Jewelry item is missing a required image" });
+    }
+
     const itemIndex = cart.items.findIndex((item) => item.jewelryId.toString() === jewelryId);
     
     if (itemIndex > -1) {
