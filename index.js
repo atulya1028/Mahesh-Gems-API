@@ -7,6 +7,7 @@ const jewelryRoutes = require("./routes/jewelryRoutes");
 const wishlistRoutes = require("./routes/wishlistRoutes");
 const cartRoutes = require("./routes/cartRoutes");
 const orderRoutes = require("./routes/orderRoutes");
+const upload = require("./middleware/multer");
 const app = express();
 
 // Middleware
