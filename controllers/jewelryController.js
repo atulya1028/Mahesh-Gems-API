@@ -3,10 +3,14 @@ const Jewelry = require("../models/Jewelry");
 exports.createJewelry = async (req, res) => {
   try {
     const { title, price, description } = req.body;
+    const images = req.files.images ? req.files.images.map(file => file.path) : [];
+    const videos = req.files.videos ? req.files.videos.map(file => file.path) : [];
+    
     const newJewelry = new Jewelry({
       title,
       price,
-      image: req.file.path,
+      images,
+      videos,
       description,
     });
     await newJewelry.save();

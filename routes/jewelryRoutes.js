@@ -12,7 +12,7 @@ const {
 const storage = new CloudinaryStorage({
   cloudinary,
   params: {
-    folder: "uploads",
+    folder: "Uploads",
     format: async (req, file) => file.mimetype.split("/")[1],
     public_id: (req, file) =>
       Date.now() +
@@ -22,7 +22,7 @@ const storage = new CloudinaryStorage({
 });
 const upload = multer({ storage });
 
-router.post("/", upload.single("image"), createJewelry);
+router.post("/", upload.fields([{ name: "images", maxCount: 10 }, { name: "videos", maxCount: 5 }]), createJewelry);
 router.get("/", getAllJewelry);
 router.get("/:id", getJewelryById);
 
