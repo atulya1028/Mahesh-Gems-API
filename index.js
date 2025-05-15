@@ -9,8 +9,15 @@ const cartRoutes = require("./routes/cartRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const app = express();
 
-// Middleware
-app.use(cors());
+// Configure CORS to allow specific origin
+const corsOptions = {
+  origin: "https://mahesh-gems.vercel.app", // Allow only your frontend origin
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Allowed HTTP methods
+  allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
+  credentials: true, // Allow cookies or auth headers if needed
+};
+
+app.use(cors(corsOptions)); // Use CORS with specific options
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
